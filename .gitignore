@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+instance/
+fittrack.db
+.env
+venv/
+node_modules/
+dist/
