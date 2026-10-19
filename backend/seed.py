@@ -1,4 +1,17 @@
-"""Seed demo data: admin + user with workouts/goals/logs."""
+import os
+import sys
+
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
+venv_python = os.path.join(backend_dir, ".venv", "bin", "python")
+if os.path.exists(venv_python) and sys.executable != venv_python:
+    try:
+        import flask_cors
+    except ImportError:
+        os.execv(venv_python, [venv_python] + sys.argv)
+
 from datetime import date, timedelta
 from app import create_app
 from app.extensions import db

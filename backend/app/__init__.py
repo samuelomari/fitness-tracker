@@ -45,4 +45,36 @@ def create_app(config_overrides=None):
 
     with app.app_context():
         db.create_all()
+        # Ensure default demo user & admin exist in database
+        from .models import User
+        try:
+            if not User.query.filter_by(email="demo@fittrack.dev").first():
+                demo_u = User(
+                    name="Demo User",
+                    email="demo@fittrack.dev",
+                    age=28,
+                    height_cm=170,
+                    weight_kg=72,
+                    gender="male",
+                    fitness_level="intermediate",
+                )
+                demo_u.set_password("demo1234")
+                db.session.add(demo_u)
+            if not User.query.filter_by(email="admin@fittrack.dev").first():
+                admin_u = User(
+                    name="Admin",
+                    email="admin@fittrack.dev",
+                    age=30,
+                    height_cm=175,
+                    weight_kg=75,
+                    gender="male",
+                    fitness_level="advanced",
+                    is_admin=True,
+                )
+                admin_u.set_password("admin123")
+                db.session.add(admin_u)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
     return app

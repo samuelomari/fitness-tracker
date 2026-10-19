@@ -1,0 +1,13 @@
+{
+  "name": "fitness-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "bash start.sh",
+    "dev": "bash start.sh",
+    "backend": "python3 backend/run.py",
+    "frontend": "npm run dev --prefix frontend",
+    "seed": "python3 backend/seed.py"
+  }
+}
+

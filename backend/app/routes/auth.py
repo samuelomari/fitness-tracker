@@ -42,8 +42,12 @@ def register():
 @auth_bp.post("/login")
 def login():
     data = request.get_json() or {}
-    user = User.query.filter_by(email=(data.get("email") or "").lower()).first()
-    if not user or not user.check_password(data.get("password", "")):
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
+    if not email or not password:
+        return jsonify({"message": "Email and password are required"}), 400
+    user = User.query.filter_by(email=email).first()
+    if not user or not user.check_password(password):
         return jsonify({"message": "Invalid email or password"}), 401
     if not user.is_active:
         return jsonify({"message": "Account suspended"}), 403
@@ -54,7 +58,8 @@ def login():
 @auth_bp.get("/me")
 @jwt_required()
 def me():
-    user = User.query.get(int(get_jwt_identity()))
+    uid = get_jwt_identity()
+    user = db.session.get(User, int(uid)) if uid else None
     if not user:
         return jsonify({"message": "Not found"}), 404
     return jsonify(user.to_dict())
@@ -63,7 +68,10 @@ def me():
 @auth_bp.put("/profile")
 @jwt_required()
 def update_profile():
-    user = User.query.get(int(get_jwt_identity()))
+    uid = get_jwt_identity()
+    user = db.session.get(User, int(uid)) if uid else None
+    if not user:
+        return jsonify({"message": "Not found"}), 404
     data = request.get_json() or {}
     for f in ["name", "age", "height_cm", "weight_kg", "gender", "fitness_level"]:
         if f in data:
