@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import date
 from ..models import Workout
 from ..extensions import db
+from ..badges import award_for_user
 
 workouts_bp = Blueprint("workouts", __name__)
 
@@ -33,7 +34,14 @@ def create_workout():
         w.date = date.fromisoformat(data["date"])
     db.session.add(w)
     db.session.commit()
-    return jsonify(w.to_dict()), 201
+    try:
+        newly = award_for_user(_uid())
+    except Exception:
+        newly = []
+    body = w.to_dict()
+    if newly:
+        body["new_badges"] = newly
+    return jsonify(body), 201
 
 
 @workouts_bp.put("/<int:wid>")

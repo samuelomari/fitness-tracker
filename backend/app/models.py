@@ -157,3 +157,92 @@ class SleepLog(db.Model):
         }
 
 
+class Exercise(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False, unique=True)
+    muscle_group = db.Column(db.String(50), nullable=False, index=True)
+    equipment = db.Column(db.String(50), nullable=False, default="bodyweight")
+    difficulty = db.Column(db.String(20), nullable=False, default="beginner")
+    description = db.Column(db.Text, nullable=True)
+    instructions = db.Column(db.Text, nullable=True)
+    image_url = db.Column(db.String(500), nullable=True)
+    video_url = db.Column(db.String(500), nullable=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id, "name": self.name, "muscle_group": self.muscle_group,
+            "equipment": self.equipment, "difficulty": self.difficulty,
+            "description": self.description, "instructions": self.instructions,
+            "image_url": self.image_url, "video_url": self.video_url,
+        }
+
+
+class Challenge(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    challenge_type = db.Column(db.String(50), nullable=False, default="workouts")
+    target = db.Column(db.Float, nullable=False, default=30)
+    duration_days = db.Column(db.Integer, nullable=False, default=30)
+    start_date = db.Column(db.Date, default=date.today)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self, user_progress=None):
+        d = {
+            "id": self.id, "title": self.title, "description": self.description,
+            "challenge_type": self.challenge_type, "target": self.target,
+            "duration_days": self.duration_days,
+            "start_date": self.start_date.isoformat() if self.start_date else None,
+            "is_active": self.is_active,
+        }
+        if user_progress is not None:
+            d["user_progress"] = user_progress
+        return d
+
+
+class ChallengeEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    challenge_id = db.Column(db.Integer, db.ForeignKey("challenge.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    progress = db.Column(db.Float, default=0)
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed = db.Column(db.Boolean, default=False)
+    __table_args__ = (db.UniqueConstraint("challenge_id", "user_id"),)
+
+    def to_dict(self):
+        return {
+            "id": self.id, "challenge_id": self.challenge_id, "user_id": self.user_id,
+            "progress": self.progress, "completed": self.completed,
+            "joined_at": self.joined_at.isoformat() if self.joined_at else None,
+        }
+
+
+class Badge(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(50), unique=True, nullable=False)
+    name = db.Column(db.String(120), nullable=False)
+    description = db.Column(db.String(300), nullable=True)
+    icon = db.Column(db.String(20), default="🏅")
+
+    def to_dict(self):
+        return {"id": self.id, "key": self.key, "name": self.name,
+                "description": self.description, "icon": self.icon}
+
+
+class UserBadge(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    badge_id = db.Column(db.Integer, db.ForeignKey("badge.id"), nullable=False)
+    earned_at = db.Column(db.DateTime, default=datetime.utcnow)
+    __table_args__ = (db.UniqueConstraint("user_id", "badge_id"),)
+
+    def to_dict(self):
+        b = Badge.query.get(self.badge_id)
+        return {
+            "id": self.id, "badge": b.to_dict() if b else None,
+            "earned_at": self.earned_at.isoformat() if self.earned_at else None,
+        }
+
+
+

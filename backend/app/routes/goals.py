@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import date
 from ..models import Goal
 from ..extensions import db
+from ..badges import award_for_user
 
 goals_bp = Blueprint("goals", __name__)
 
@@ -38,7 +39,14 @@ def update_goal(gid):
     if data.get("deadline"): g.deadline = date.fromisoformat(data["deadline"])
     if g.target and g.current_progress >= g.target: g.status = "completed"
     db.session.commit()
-    return jsonify(g.to_dict())
+    try:
+        newly = award_for_user(_uid())
+    except Exception:
+        newly = []
+    body = g.to_dict()
+    if newly:
+        body["new_badges"] = newly
+    return jsonify(body)
 
 @goals_bp.delete("/<int:gid>")
 @jwt_required()

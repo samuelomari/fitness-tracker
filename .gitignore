@@ -4,5 +4,7 @@ instance/
 fittrack.db
 .env
 venv/
+.venv/
+*.db
 node_modules/
 dist/
